@@ -5,34 +5,44 @@
 $error=0;
 
 if(isset($_POST['submit'])){
-	$Username=mysqli_real_escape_string($connection,$_POST['Username']);
-	$Password=mysqli_real_escape_string($connection,$_POST['Password']);
 
-	$query="SELECT * FROM users WHERE username='{$Username}' AND password='{$Password}' LIMIT 1";
+	$Username = filter_input(INPUT_POST, 'Username', FILTER_SANITIZE_STRING);
+    $Password = filter_input(INPUT_POST, 'Password', FILTER_SANITIZE_STRING);
+
+	$query = "SELECT id, password, user_type FROM users WHERE username='$Username' LIMIT 1";
 
 	$result_set=mysqli_query($connection,$query);
 
 	if($result_set){
-		if(mysqli_num_rows($result_set)==1){
-			$this_user=mysqli_fetch_assoc($result_set);
-			$this_user_type=$this_user['user_type'];
-			$_SESSION['user_id']=$this_user['id'];
+			$this_user = mysqli_fetch_assoc($result_set);
+
+            $this_user_type=$this_user['user_type'];
+            
+			if(password_verify($Password, $this_user['password'])){
+
+				$_SESSION['user_id']=$this_user['id'];
+				
+				
+				if($this_user_type=="s"){
+					header('Location:student.php');
+				}
+				if($this_user_type=="l"){
+					header('Location:lecture.php');
+				}
+				if($this_user_type=="a"){
+					header('Location:staff.php');
+				}
+				
+				} else {
+				
+			  $error=1;
+				
+				}
 			
-			
-			if($this_user_type=="s"){
-				header('Location:student.php');
-			}
-			if($this_user_type=="l"){
-				header('Location:lecture.php');
-			}
-			if($this_user_type=="a"){
-				header('Location:staff.php');
-			}
-			
-		}
-		else{
-		$error=1;
-		}
+	} else {
+
+	$error=1;
+
 	}
 }
 
